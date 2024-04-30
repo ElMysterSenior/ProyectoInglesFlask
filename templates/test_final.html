@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador Final</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Simulador Final</h1>
+        <p>El simulador final consta de 40 preguntas y se puede intentar hasta 2 veces para obtener el pase para ubicar al alumno en el nivel adecuado.</p>
+        <form action="{{ url_for('test_final') }}" method="POST">
+            {% for pregunta in preguntas %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pregunta {{ loop.index }}</h5>
+                    <p class="card-text">{{ pregunta.Texto }}</p>
+                    <div class="form-group">
+                        <select name="respuesta_{{ pregunta.PreguntaID }}" class="form-control">
+                            {% for opcion in pregunta.opciones %}
+                            <option value="{{ opcion }}">{{ opcion }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Enviar respuestas</button>
+        </form>
+    </div>
+</body>
+</html>

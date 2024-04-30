@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Usuario</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Registro de Usuario</h1>
+        <form method="post">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="correo">Correo Electrónico:</label>
+                <input type="email" class="form-control" id="correo" name="correo" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Ingresar</button>
+        </form>
+        <div class="mt-3">
+            <form action="{{ url_for('resultados_total') }}" method="get">
+                <div class="form-group">
+                    <label for="correo_consulta">Ingresa tu correo electrónico para ver tus resultados:</label>
+                    <input type="email" class="form-control" id="correo_consulta" name="correo_consulta" required>
+                </div>
+                <button type="submit" class="btn btn-secondary">Ver Resultados Totales</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

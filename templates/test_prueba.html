@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test de Prueba</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .correcta {
+            background-color: lightgreen;
+        }
+        .incorrecta {
+            background-color: lightcoral;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="text-right">
+            {% if 'nombre' in session %}
+            <p>Bienvenido, {{ session['nombre'] }}</p>
+            <p>Correo electrónico: {{ session['correo'] }}</p>
+            {% endif %}
+        </div>
+        <h1>Test de Prueba</h1>
+        <form action="{{ url_for('test_prueba') }}" method="post">
+            {% for pregunta in preguntas %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <strong>Pregunta {{ loop.index }}</strong>: {{ pregunta.Texto }}
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        {% for opcion in pregunta.opciones %}
+                        <div class="form-check">
+                            {% if opcion == pregunta.RespuestaCorrecta %}
+                            {% set clase = 'correcta' %}
+                            {% elif opcion == request.form[(pregunta.PreguntaID)] %}
+                            {% set clase = 'incorrecta' %}
+                            {% else %}
+                            {% set clase = '' %}
+                            {% endif %}
+                            <input class="form-check-input" type="radio" name="{{ pregunta.PreguntaID }}" id="{{ pregunta.PreguntaID }}_{{ loop.index }}" value="{{ opcion }}">
+                            <label class="form-check-label {{ clase }}" for="{{ pregunta.PreguntaID }}_{{ loop.index }}">
+                                {{ opcion }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary mt-3">Finalizar</button>
+        </form>
+    </div>
+</body>
+</html>

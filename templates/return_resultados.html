@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados del Examen</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="text-right">
+            {% if 'nombre' in session %}
+            <p>Bienvenido, {{ session['nombre'] }}</p>
+            <p>Correo electrónico: {{ session['correo'] }}</p>
+            {% endif %}
+        </div>
+        <h1 class="text-center">Resultados del Examen</h1>
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">¡Tu nivel de habilidad es: {{ nivel_habilidad }}</h5>
+                <h3>Calificación: {{ calificacion }}%</h3>
+                <p class="card-text">¡Felicidades por completar el examen!</p>
+                {% if intentos_registrados_prueba >= 5 %}
+                <button class="btn btn-primary" disabled>Volver a tomar el examen</button>
+                {% else %}
+                <a href="{{ url_for('test_prueba') }}" class="btn btn-primary">Volver a tomar el examen</a>
+                {% endif %}
+
+                {% if intentos_registrados_simulador_final >= 2 %}
+                <button class="btn btn-primary" disabled>Volver a tomar el simulador final</button>
+            {% else %}
+                <a href="{{ url_for('test_final') }}" class="btn btn-primary">Volver a tomar el simulador final</a>
+            {% endif %}
+            
+
+
+                <a href="{{ url_for('iniciar') }}" class="btn btn-secondary">Regresar al inicio</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

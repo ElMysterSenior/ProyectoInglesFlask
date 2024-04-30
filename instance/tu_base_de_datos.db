@@ -1,0 +1,71 @@
+
+--
+-- Base de datos: `examen_ingles`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `preguntas`
+--
+
+DROP TABLE IF EXISTS `preguntas`;
+CREATE TABLE IF NOT EXISTS `preguntas` (
+  `PreguntaID` int NOT NULL AUTO_INCREMENT,
+  `Texto` varchar(255) NOT NULL,
+  `Nivel` enum('basico','intermedio','avanzado') NOT NULL,
+  `RespuestaCorrecta` varchar(255) NOT NULL,
+  PRIMARY KEY (`PreguntaID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `resultados`
+--
+
+DROP TABLE IF EXISTS `resultados`;
+CREATE TABLE IF NOT EXISTS `resultados` (
+  `ResultadoID` int NOT NULL AUTO_INCREMENT,
+  `SimuladorID` int DEFAULT NULL,
+  `PreguntaID` int DEFAULT NULL,
+  `RespuestaUsuario` varchar(255) DEFAULT NULL,
+  `PuntosObtenidos` decimal(5,2) DEFAULT NULL,
+  PRIMARY KEY (`ResultadoID`),
+  KEY `SimuladorID` (`SimuladorID`),
+  KEY `PreguntaID` (`PreguntaID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `simuladores`
+--
+
+DROP TABLE IF EXISTS `simuladores`;
+CREATE TABLE IF NOT EXISTS `simuladores` (
+  `SimuladorID` int NOT NULL AUTO_INCREMENT,
+  `UsuarioID` int DEFAULT NULL,
+  `TipoSimulador` enum('practica','final') NOT NULL,
+  `FechaHora` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SimuladorID`),
+  KEY `UsuarioID` (`UsuarioID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuarios`
+--
+
+DROP TABLE IF EXISTS `usuarios`;
+CREATE TABLE IF NOT EXISTS `usuarios` (
+  `UsuarioID` int NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(255) NOT NULL,
+  `CorreoElectronico` varchar(100) NOT NULL,
+  `Contrasena` varchar(255) NOT NULL,
+  PRIMARY KEY (`UsuarioID`),
+  UNIQUE KEY `CorreoElectronico` (`CorreoElectronico`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+COMMIT;
+

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1>Inicio</h1>
+        <div class="text-right">
+            {% if 'nombre' in session %}
+            <p>Bienvenido, {{ session['nombre'] }}</p>
+            <p class="text-muted">* La sesión se inicia solo una vez. Los resultados están enlazados al correo electrónico.</p>
+            <a href="/" class="mb-4 btn btn-danger">Cerrar sesión</a>
+            {% endif %}
+        </div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Test de Prueba</h5>
+                <p class="card-text">El test de prueba consta de 20 preguntas y se puede realizar hasta 5 veces para
+                    fines de estudio y práctica.</p>
+                {% if intentos_registrados_prueba >= 5 %}
+                <button class="btn btn-primary" disabled>Comenzar Test de Prueba</button>
+                {% else %}
+                <a href="/test_prueba" class="btn btn-primary">Comenzar Test de Prueba</a>
+                {% endif %}
+
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Examen Final</h5>
+                <p class="card-text">El examen final consta de 40 preguntas y se puede intentar hasta 2 veces para
+                    obtener el pase para ubicar al alumno en el nivel adecuado.</p>
+                {% if intentos_registrados_simulador_final >= 2 %}
+                <button class="btn btn-primary" disabled>Comenzar Examen Final</button>
+                {% else %}
+                <a href="/test_final" class="btn btn-primary">Comenzar Examen Final</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
