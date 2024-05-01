@@ -1,31 +1,32 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador Final</title>
+    <title>Test de Prueba</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <h1>Simulador Final</h1>
-        <p>El simulador final consta de 40 preguntas y se puede intentar hasta 2 veces para obtener el pase para ubicar al alumno en el nivel adecuado.</p>
-        <form action="{{ url_for('test_final') }}" method="POST">
+        <h1>Test de Prueba</h1>
+        <form action="{{ url_for('test_prueba') }}" method="post">
             {% for pregunta in preguntas %}
-            <div class="card mb-3">
+            <div class="card mt-3">
+                <div class="card-header">
+                    Pregunta {{ loop.index }}: {{ pregunta['PreguntaTexto'] }}
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Pregunta {{ loop.index }}</h5>
-                    <p class="card-text">{{ pregunta.Texto }}</p>
-                    <div class="form-group">
-                        <select name="respuesta_{{ pregunta.PreguntaID }}" class="form-control">
-                            {% for opcion in pregunta.opciones %}
-                            <option value="{{ opcion }}">{{ opcion }}</option>
-                            {% endfor %}
-                        </select>
+                    {% for opcion in pregunta['opciones'] %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="{{ pregunta['PreguntaID'] }}" id="opcion_{{ pregunta['PreguntaID'] }}_{{ loop.index }}" value="{{ opcion }}">
+                        <label class="form-check-label" for="opcion_{{ pregunta['PreguntaID'] }}_{{ loop.index }}">
+                            {{ opcion }}
+                        </label>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
-            <button type="submit" class="btn btn-primary">Enviar respuestas</button>
+            <button type="submit" class="btn btn-primary mt-3">Enviar respuestas</button>
         </form>
     </div>
 </body>

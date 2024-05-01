@@ -137,37 +137,35 @@ def return_resultados():
                            intentos_registrados_simulador_final=intentos_registrados_simulador_final_var, calificacion=calificacion)  # Incluye la calificación en la renderización de la plantilla
 
 
+def generar_opciones(respuesta_correcta, respuestas_incorrectas):
+    opciones = [respuesta_correcta] + respuestas_incorrectas
+    random.shuffle(opciones)
+    return opciones
 
 def obtener_preguntas():
     with get_db().cursor() as cursor:
-        # Selecciona preguntas únicas aleatorias
-        sql = "SELECT * FROM preguntas ORDER BY RAND() LIMIT 20"
+        sql = "SELECT PreguntaID, Texto, RespuestaCorrecta FROM preguntas ORDER BY RAND() LIMIT 20"
         cursor.execute(sql)
-        preguntas = cursor.fetchall()
+        preguntas_raw = cursor.fetchall()
+    
+    preguntas = []
+    for pregunta in preguntas_raw:
+        opciones = generar_opciones(pregunta['RespuestaCorrecta'], obtener_respuestas_incorrectas(pregunta['RespuestaCorrecta']))
+        preguntas.append({
+            'PreguntaID': pregunta['PreguntaID'],
+            'PreguntaTexto': pregunta['Texto'],
+            'opciones': opciones
+        })
+    
     return preguntas
 
-def generar_opciones(respuesta_correcta, respuestas_incorrectas):
-    opciones = respuestas_incorrectas.copy()  # Copia la lista de respuestas incorrectas
-    indice_respuesta_correcta = random.randint(0, len(opciones))  # Genera un índice aleatorio para insertar la respuesta correcta
-    opciones.insert(indice_respuesta_correcta, respuesta_correcta)  # Inserta la respuesta correcta en el índice aleatorio
-    
-    # Verificamos que haya al menos tres opciones en total (incluyendo la respuesta correcta)
-    while len(opciones) < 4:
-        with get_db().cursor() as cursor:
-            if respuestas_incorrectas:
-                # Seleccionar una respuesta aleatoria que no sea la respuesta correcta ni esté en las opciones incorrectas
-                sql = "SELECT RespuestaCorrecta FROM preguntas WHERE RespuestaCorrecta != %s AND RespuestaCorrecta NOT IN %s ORDER BY RAND() LIMIT 1"
-                cursor.execute(sql, (respuesta_correcta, tuple(respuestas_incorrectas)))
-            else:
-                # Si no hay respuestas incorrectas, seleccionar una respuesta aleatoria que no sea la respuesta correcta
-                sql = "SELECT RespuestaCorrecta FROM preguntas WHERE RespuestaCorrecta != %s ORDER BY RAND() LIMIT 1"
-                cursor.execute(sql, (respuesta_correcta,))
-            respuesta_incorrecta = cursor.fetchone()
-            if respuesta_incorrecta and respuesta_incorrecta['RespuestaCorrecta'] not in opciones:
-                opciones.append(respuesta_incorrecta['RespuestaCorrecta'])
-    
-    random.shuffle(opciones)  # Mezclar las opciones
-    return opciones
+def obtener_respuestas_incorrectas(respuesta_correcta):
+    # Aquí deberías implementar la lógica para obtener respuestas incorrectas diferentes de la respuesta correcta
+    with get_db().cursor() as cursor:
+        cursor.execute("SELECT RespuestaCorrecta FROM preguntas WHERE RespuestaCorrecta != %s ORDER BY RAND() LIMIT 3", (respuesta_correcta,))
+        resultados = cursor.fetchall()
+    return [res['RespuestaCorrecta'] for res in resultados if res['RespuestaCorrecta'] != respuesta_correcta]
+
 
 
 
@@ -193,45 +191,54 @@ def obtener_numero_intentos(usuario_id):
 
 @app.route('/test_prueba', methods=['GET', 'POST'])
 def test_prueba():
-    # Obtener el ID del usuario desde la sesión
     usuario_id = session.get('usuario_id')
-    
-    # Obtener el número de intentos registrados
-    intentos_registrados_prueba_var = obtener_numero_intentos(usuario_id)
-    
-    preguntas = obtener_preguntas()
-    preguntas_con_opciones = []
-    puntos = 0
+    preguntas = obtener_preguntas()  # Asegúrate de que esta función trae correctamente las preguntas y las respuestas correctas.
 
     if request.method == 'POST':
-        # Procesar las respuestas del formulario
-        for pregunta in preguntas:
-            respuesta_usuario = request.form.get(str(pregunta['PreguntaID']))
-            if respuesta_usuario == pregunta['RespuestaCorrecta']:
-                puntos += 5  # Sumar puntos si la respuesta es correcta
+        print("Datos del formulario recibidos:", request.form)
+        puntos = 0
+        errores = []
 
-        # Calcular la calificación
-        calificacion = (puntos / (len(preguntas) * 5)) * 100
+        # Recorrer las respuestas del formulario
+        for pregunta_id, respuesta_usuario in request.form.items():
+            # Convertir pregunta_id a entero
+            pregunta_id = int(pregunta_id)
+            # Obtener la respuesta correcta de la base de datos
+            with get_db().cursor() as cursor:
+                cursor.execute("SELECT RespuestaCorrecta FROM preguntas WHERE PreguntaID = %s", (pregunta_id,))
+                respuesta = cursor.fetchone()
 
-        # Definir el resultado (Aprobado o Reprobado)
+            # Si encontramos la respuesta en la base de datos
+            if respuesta:
+                respuesta_correcta = respuesta['RespuestaCorrecta']
+                # Comparar la respuesta del usuario con la respuesta correcta
+                if respuesta_usuario == respuesta_correcta:
+                    puntos += 1
+                else:
+                    errores.append((pregunta_id, respuesta_usuario, respuesta_correcta))
+            else:
+                errores.append((pregunta_id, respuesta_usuario, "No se encontró respuesta en la base de datos"))
+
+        # Calcular la calificación y decidir el resultado
+        calificacion = (puntos / len(preguntas)) * 100 if preguntas else 0
         resultado = 'Aprobado' if calificacion >= 70 else 'Reprobado'
 
-        # Registrar el simulador de práctica y la calificación en la base de datos
+        # Guardar los resultados en la base de datos
         with get_db().cursor() as cursor:
-            sql = "INSERT INTO simuladores (UsuarioID, TipoSimulador, Calificacion, Resultado) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (usuario_id, 'practica', calificacion, resultado))
+            cursor.execute(
+                "INSERT INTO simuladores (UsuarioID, TipoSimulador, Calificacion, Resultado) VALUES (%s, 'practica', %s, %s)",
+                (usuario_id, calificacion, resultado)
+            )
 
-        nivel_habilidad = calcular_nivel_habilidad(calificacion)
+        # Imprimir errores si los hay
+        if errores:
+            for error in errores:
+                print(f"Error en pregunta {error[0]}: respuesta enviada '{error[1]}', respuesta correcta '{error[2]}'")
 
-        return redirect(url_for('return_resultados', puntaje=puntos, nivel_habilidad=nivel_habilidad, resultado=resultado, calificacion=calificacion))
+        return redirect(url_for('return_resultados', puntaje=puntos, nivel_habilidad=calificacion, resultado=resultado, calificacion=calificacion))
 
-    # Generar opciones para cada pregunta
-    for pregunta in preguntas:
-        opciones = generar_opciones(pregunta['RespuestaCorrecta'], [])
-        pregunta['opciones'] = opciones
-        preguntas_con_opciones.append(pregunta)
+    return render_template('test_prueba.html', preguntas=preguntas, nombre=session.get('nombre'), correo=session.get('correo'))
 
-    return render_template('test_prueba.html', preguntas=preguntas_con_opciones, nombre=session.get('nombre'), correo=session.get('correo'), intentos_registrados_prueba=intentos_registrados_prueba_var)
 
     
 @app.route('/test_final', methods=['GET', 'POST'])
