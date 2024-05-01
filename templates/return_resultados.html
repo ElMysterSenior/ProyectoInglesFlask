@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,7 +7,6 @@
     <title>Resultados del Examen</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container mt-5">
         <div class="text-right">
@@ -20,7 +18,7 @@
         <h1 class="text-center">Resultados del Examen</h1>
         <div class="card mt-3">
             <div class="card-body">
-                <h5 class="card-title">¡Tu nivel de habilidad es: {{ nivel_habilidad }}</h5>
+                <h5 class="card-title">Tu nivel de habilidad es: {{ nivel }}</h5> <!-- Línea modificada para incluir el nivel -->
                 <h3>Calificación: {{ calificacion }}%</h3>
                 <p class="card-text">¡Felicidades por completar el examen!</p>
                 {% if intentos_registrados_prueba >= 5 %}
@@ -31,16 +29,12 @@
 
                 {% if intentos_registrados_simulador_final >= 2 %}
                 <button class="btn btn-primary" disabled>Volver a tomar el simulador final</button>
-            {% else %}
+                {% else %}
                 <a href="{{ url_for('test_final') }}" class="btn btn-primary">Volver a tomar el simulador final</a>
-            {% endif %}
-            
-
-
+                {% endif %}
                 <a href="{{ url_for('iniciar') }}" class="btn btn-secondary">Regresar al inicio</a>
             </div>
         </div>
     </div>
 </body>
-
 </html>

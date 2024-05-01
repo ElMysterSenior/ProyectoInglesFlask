@@ -1,43 +1,41 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados Totales</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">Resultados Totales</h1>
-        <div class="table-responsive mt-3">
-            {% if resultados %}
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Tipo de Simulador</th>
-                        <th>Calificación</th>
-                        <th>Resultado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for resultado in resultados %}
-                    <tr>
-                        <td>{{ resultado.TipoSimulador }}</td>
-                        <td>{{ resultado.Calificacion }}</td>
-                        <td>{{ resultado.Resultado }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No se encontraron resultados para el correo electrónico proporcionado.</p>
-            {% endif %}
-        </div>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Regresar al inicio</a>
+        <h1>Resultados Totales</h1>
+        {% if resultados %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID Simulador</th>
+                    <th>Tipo de Simulador</th>
+                    <th>Fecha y Hora</th>
+                    <th>Calificación</th>
+                    <th>Resultado</th>
+                    <th>Nivel</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resultado in resultados %}
+                <tr>
+                    <td>{{ resultado.SimuladorID }}</td>
+                    <td>{{ resultado.TipoSimulador }}</td>
+                    <td>{{ resultado.FechaHora }}</td>
+                    <td>{{ resultado.Calificacion }}</td>
+                    <td>{{ resultado.Resultado }}</td>
+                    <td>{{ resultado.Nivel }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No se encontraron resultados.</p>
+        {% endif %}
     </div>
 </body>
-
 </html>

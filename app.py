@@ -126,7 +126,7 @@ def return_resultados():
     nivel_habilidad = request.args.get('nivel_habilidad')
     resultado = request.args.get('resultado')
     calificacion = request.args.get('calificacion') 
-    
+    nivel = request.args.get('nivel')
     # Aquí puedes calcular el número de intentos registrados por el usuario
     usuario_id = session.get('usuario_id')
     intentos_registrados_prueba_var = obtener_numero_intentos(usuario_id)
@@ -134,7 +134,7 @@ def return_resultados():
     
     return render_template('return_resultados.html', puntaje=puntaje, nivel_habilidad=nivel_habilidad, resultado=resultado,
                            nombre=session.get('nombre'), correo=session.get('correo'), intentos_registrados_prueba=intentos_registrados_prueba_var,
-                           intentos_registrados_simulador_final=intentos_registrados_simulador_final_var, calificacion=calificacion)  # Incluye la calificación en la renderización de la plantilla
+                           intentos_registrados_simulador_final=intentos_registrados_simulador_final_var, calificacion=calificacion,nivel=nivel)  # Incluye la calificación en la renderización de la plantilla
 
 
 def generar_opciones(respuesta_correcta, respuestas_incorrectas):
@@ -196,29 +196,25 @@ def obtener_numero_intentos(usuario_id):
         num_intentos = resultado['num_intentos']
     return num_intentos
 
+
 @app.route('/test_prueba', methods=['GET', 'POST'])
 def test_prueba():
     usuario_id = session.get('usuario_id')
-    preguntas = obtener_preguntas()  # Asegúrate de que esta función trae correctamente las preguntas y las respuestas correctas.
+    preguntas = obtener_preguntas()
 
     if request.method == 'POST':
         print("Datos del formulario recibidos:", request.form)
         puntos = 0
         errores = []
 
-        # Recorrer las respuestas del formulario
         for pregunta_id, respuesta_usuario in request.form.items():
-            # Convertir pregunta_id a entero
             pregunta_id = int(pregunta_id)
-            # Obtener la respuesta correcta de la base de datos
             with get_db().cursor() as cursor:
                 cursor.execute("SELECT RespuestaCorrecta FROM preguntas WHERE PreguntaID = %s", (pregunta_id,))
                 respuesta = cursor.fetchone()
 
-            # Si encontramos la respuesta en la base de datos
             if respuesta:
                 respuesta_correcta = respuesta['RespuestaCorrecta']
-                # Comparar la respuesta del usuario con la respuesta correcta
                 if respuesta_usuario == respuesta_correcta:
                     puntos += 1
                 else:
@@ -226,52 +222,38 @@ def test_prueba():
             else:
                 errores.append((pregunta_id, respuesta_usuario, "No se encontró respuesta en la base de datos"))
 
-        # Calcular la calificación y decidir el resultado
         calificacion = (puntos / len(preguntas)) * 100 if preguntas else 0
         resultado = 'Aprobado' if calificacion >= 70 else 'Reprobado'
+        nivel = calcular_nivel(calificacion)
 
-        # Guardar los resultados en la base de datos
         with get_db().cursor() as cursor:
             cursor.execute(
-                "INSERT INTO simuladores (UsuarioID, TipoSimulador, Calificacion, Resultado) VALUES (%s, 'practica', %s, %s)",
-                (usuario_id, calificacion, resultado)
+                "INSERT INTO simuladores (UsuarioID, TipoSimulador, Calificacion, Resultado, Nivel) VALUES (%s, 'practica', %s, %s, %s)",
+                (usuario_id, calificacion, resultado, nivel)
             )
 
-        # Imprimir errores si los hay
-        if errores:
-            for error in errores:
-                print(f"Error en pregunta {error[0]}: respuesta enviada '{error[1]}', respuesta correcta '{error[2]}'")
-
-        return redirect(url_for('return_resultados', puntaje=puntos, nivel_habilidad=calificacion, resultado=resultado, calificacion=calificacion))
+        return redirect(url_for('return_resultados', puntaje=puntos, nivel_habilidad=calificacion, resultado=resultado, calificacion=calificacion, nivel=nivel))
 
     return render_template('test_prueba.html', preguntas=preguntas, nombre=session.get('nombre'), correo=session.get('correo'))
-
 
 @app.route('/test_final', methods=['GET', 'POST'])
 def test_final():
     usuario_id = session.get('usuario_id')
-    preguntas = obtener_preguntas_simulador_final()  # Asegura que se generan las preguntas con opciones
-
-    for pregunta in preguntas:
-        pregunta['opciones'] = generar_opciones(pregunta['RespuestaCorrecta'], obtener_respuestas_incorrectas(pregunta['RespuestaCorrecta']))
+    preguntas = obtener_preguntas_simulador_final()
 
     if request.method == 'POST':
         print("Datos del formulario recibidos:", request.form)
         puntos = 0
         errores = []
 
-        # Recorrer las respuestas del formulario
         for pregunta_id, respuesta_usuario in request.form.items():
-            pregunta_id = int(pregunta_id)  # Convertir pregunta_id a entero
-            # Obtener la respuesta correcta de la base de datos
+            pregunta_id = int(pregunta_id)
             with get_db().cursor() as cursor:
                 cursor.execute("SELECT RespuestaCorrecta FROM preguntas WHERE PreguntaID = %s", (pregunta_id,))
                 respuesta = cursor.fetchone()
 
-            # Si encontramos la respuesta en la base de datos
             if respuesta:
                 respuesta_correcta = respuesta['RespuestaCorrecta']
-                # Comparar la respuesta del usuario con la respuesta correcta
                 if respuesta_usuario == respuesta_correcta:
                     puntos += 1
                 else:
@@ -279,26 +261,19 @@ def test_final():
             else:
                 errores.append((pregunta_id, respuesta_usuario, "No se encontró respuesta en la base de datos"))
 
-        # Calcular la calificación y decidir el resultado
         calificacion = (puntos / len(preguntas)) * 100 if preguntas else 0
         resultado = 'Aprobado' if calificacion >= 70 else 'Reprobado'
+        nivel = calcular_nivel(calificacion)
 
-        # Guardar los resultados en la base de datos
         with get_db().cursor() as cursor:
             cursor.execute(
-                "INSERT INTO simuladores (UsuarioID, TipoSimulador, Calificacion, Resultado) VALUES (%s, 'final', %s, %s)",
-                (usuario_id, calificacion, resultado)
+                "INSERT INTO simuladores (UsuarioID, TipoSimulador, Calificacion, Resultado, Nivel) VALUES (%s, 'final', %s, %s, %s)",
+                (usuario_id, calificacion, resultado, nivel)
             )
 
-        # Imprimir errores si los hay
-        if errores:
-            for error in errores:
-                print(f"Error en pregunta {error[0]}: respuesta enviada '{error[1]}', respuesta correcta '{error[2]}'")
+        return redirect(url_for('return_resultados', puntaje=puntos, nivel_habilidad=calificacion, resultado=resultado, calificacion=calificacion, nivel=nivel))
 
-        return redirect(url_for('return_resultados', puntaje=puntos, nivel_habilidad=calificacion, resultado=resultado, calificacion=calificacion))
-
-    return render_template('test_final.html', preguntas=preguntas, nombre=session.get('nombre'), correo=session.get('correo'))
-  
+    return render_template('test_final.html', preguntas=preguntas)
 
 
 
@@ -307,6 +282,14 @@ def calcular_nivel_habilidad(calificacion):
     calificacion_ajustada = min(max(calificacion, 0), 100)
     return calificacion_ajustada
 
+def calcular_nivel(calificacion):
+    if 70 <= calificacion < 81:
+        return 'Básico'
+    elif 81 <= calificacion < 91:
+        return 'Intermedio'
+    elif 91 <= calificacion <= 100:
+        return 'Avanzado'
+    return 'No Aprobado'
 
 
 # Función para registrar los intentos del usuario en la base de datos para el simulador final
